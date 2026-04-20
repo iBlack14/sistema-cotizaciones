@@ -119,6 +119,7 @@ Puedes desplegar este proyecto como aplicacion PHP/Laravel desde un repositorio 
 3. Selecciona este repositorio.
 4. Usa la rama principal.
 5. Define el dominio.
+6. Usa `Dockerfile` como `Build Pack`.
 
 ### 2. Variables recomendadas en Coolify
 
@@ -153,28 +154,24 @@ WHATSAPP_COUNTRY_CODE=51
 SYSTEM_MAINTENANCE_KEY=una_clave_larga_y_privada
 ```
 
-### 3. Build command
+### 3. Build Pack recomendado
 
-Si Coolify te pide comandos manuales, usa:
+Este repositorio incluye un `Dockerfile` pensado para Coolify.
 
-```bash
-composer install --no-dev --optimize-autoloader
-npm install
-npm run build
-php artisan package:discover --ansi
-php artisan storage:link || true
-php artisan config:clear
-php artisan cache:clear
-php artisan view:clear
+Usa:
+
+- `Build Pack`: `Dockerfile`
+- `Port Exposes`: `80`
+
+No hace falta usar estas variables de Nixpacks:
+
+```env
+NIXPACKS_PHP_ROOT_DIR
+NIXPACKS_PHP_FALLBACK_PATH
+NIXPACKS_NODE_VERSION
 ```
 
-### 4. Start command
-
-En la mayoria de despliegues Laravel con Nginx/Apache administrado por Coolify no necesitas un comando custom de arranque.
-
-Si estas usando una imagen o configuracion que lo requiera, apunta siempre a la carpeta `public/`.
-
-### 5. Post-deploy command
+### 4. Post-deploy command
 
 Usa esto despues de cada deploy:
 
@@ -185,14 +182,14 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-### 6. Permisos
+### 5. Permisos
 
 Verifica que la aplicacion tenga escritura en:
 
 - `storage/`
 - `bootstrap/cache/`
 
-### 7. Queue worker
+### 6. Queue worker
 
 Si vas a usar colas, crea un worker separado en Coolify con:
 
@@ -229,4 +226,3 @@ Eso es esperado: el sistema abre WhatsApp Web o la app del usuario con el mensaj
 - [DEPLOY_VPS.md](c:\Users\via\Downloads\sistema cotizaciones\DEPLOY_VPS.md)
 - [.env.example](c:\Users\via\Downloads\sistema cotizaciones\.env.example)
 - [phpunit.xml.dist](c:\Users\via\Downloads\sistema cotizaciones\phpunit.xml.dist)
-
