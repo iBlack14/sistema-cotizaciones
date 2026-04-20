@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Quotation;
 use App\Models\Domain;
 use App\Models\PredefinedMessage;
+use App\Models\Quotation;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 
@@ -77,7 +77,7 @@ class SoporteController extends Controller
     public function send(Request $request, WhatsAppService $wa)
     {
         $validated = $request->validate([
-            'phone'   => 'required|string|max:32',
+            'phone' => 'required|string|max:32',
             'message' => 'required|string|max:5000',
         ]);
 

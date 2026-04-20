@@ -1,11 +1,11 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -27,7 +27,7 @@ return new class extends Migration {
                     ->orWhere('title', $message->name)
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('predefined_messages')->insert([
                         'number' => $currentMaxNumber,
                         'title' => $message->name,

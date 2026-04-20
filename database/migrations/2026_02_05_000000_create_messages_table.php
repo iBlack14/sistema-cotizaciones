@@ -25,7 +25,7 @@ return new class extends Migration
             $table->timestamp('sent_at')->nullable();
             $table->json('metadata')->nullable(); // Para datos adicionales como archivos adjuntos
             $table->timestamps();
-            
+
             $table->index(['user_id', 'status']);
             $table->index(['type', 'status']);
             $table->index('scheduled_at');

@@ -26,7 +26,7 @@ Route::get('/system/migrate', function () {
     $configuredKey = (string) env('SYSTEM_MAINTENANCE_KEY', '');
     $providedKey = (string) request()->query('key', '');
 
-    if ($configuredKey === '' || $providedKey === '' || !hash_equals($configuredKey, $providedKey)) {
+    if ($configuredKey === '' || $providedKey === '' || ! hash_equals($configuredKey, $providedKey)) {
         return response()->json([
             'success' => false,
             'error' => 'Unauthorized',
@@ -127,4 +127,4 @@ Route::middleware('auth')->group(function () {
 
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

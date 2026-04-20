@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Imports\DomainsImport;
 use App\Models\Domain;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -131,7 +131,7 @@ class DomainController extends Controller
     {
         $validated = $request->validate([
             'client_name' => 'required|string|max:255',
-            'domain_name' => 'required|string|max:255|unique:domains,domain_name,' . $domain->id,
+            'domain_name' => 'required|string|max:255|unique:domains,domain_name,'.$domain->id,
             'registration_date' => 'required|date',
             'expiration_date' => 'required|date|after:registration_date',
             'auto_renew' => 'boolean',
@@ -187,7 +187,7 @@ class DomainController extends Controller
                 $errorMessage .= implode("\n", array_slice($import->getErrors(), 0, 10));
 
                 if (count($import->getErrors()) > 10) {
-                    $errorMessage .= "\n... y " . (count($import->getErrors()) - 10) . ' errores más.';
+                    $errorMessage .= "\n... y ".(count($import->getErrors()) - 10).' errores más.';
                 }
 
                 return redirect()->route('domains.index')
@@ -198,7 +198,7 @@ class DomainController extends Controller
                 ->with('success', "{$import->getImportedCount()} dominios importados correctamente");
         } catch (\Exception $e) {
             return redirect()->route('domains.index')
-                ->with('error', 'Error al importar el archivo: ' . $e->getMessage());
+                ->with('error', 'Error al importar el archivo: '.$e->getMessage());
         }
     }
 
@@ -266,7 +266,7 @@ class DomainController extends Controller
         $fileName = 'plantilla_dominios.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $fileName . '"');
+        header('Content-Disposition: attachment;filename="'.$fileName.'"');
         header('Cache-Control: max-age=0');
 
         $writer->save('php://output');
@@ -290,8 +290,8 @@ class DomainController extends Controller
         // Add data
         $row = 2;
         foreach ($domains as $domain) {
-            $sheet->setCellValue('A' . $row, $domain->domain_name);
-            $sheet->setCellValue('B' . $row, $domain->phone ?? '');
+            $sheet->setCellValue('A'.$row, $domain->domain_name);
+            $sheet->setCellValue('B'.$row, $domain->phone ?? '');
             $row++;
         }
 
@@ -310,10 +310,10 @@ class DomainController extends Controller
 
         // Create response
         $writer = new Xlsx($spreadsheet);
-        $fileName = 'exportacion_dominios_' . now()->format('Y-m-d_H-i') . '.xlsx';
+        $fileName = 'exportacion_dominios_'.now()->format('Y-m-d_H-i').'.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $fileName . '"');
+        header('Content-Disposition: attachment;filename="'.$fileName.'"');
         header('Cache-Control: max-age=0');
 
         $writer->save('php://output');
@@ -335,9 +335,12 @@ class DomainController extends Controller
 
         if ($request->filled('status')) {
             switch ($request->status) {
-                case 'activo':     $query->active();       break;
-                case 'expirado':   $query->expired();      break;
-                case 'por_vencer': $query->expiringSoon(); break;
+                case 'activo':     $query->active();
+                    break;
+                case 'expirado':   $query->expired();
+                    break;
+                case 'por_vencer': $query->expiringSoon();
+                    break;
             }
         }
 
@@ -347,16 +350,16 @@ class DomainController extends Controller
         $title = 'REPORTE GENERAL DE DOMINIOS';
         if ($request->filled('status')) {
             $labels = ['activo' => 'ACTIVOS', 'expirado' => 'EXPIRADOS', 'por_vencer' => 'POR VENCER'];
-            $title = 'DOMINIOS ' . ($labels[$request->status] ?? strtoupper($request->status));
+            $title = 'DOMINIOS '.($labels[$request->status] ?? strtoupper($request->status));
         }
         if ($request->filled('search')) {
-            $title .= ' — Búsqueda: "' . $request->search . '"';
+            $title .= ' — Búsqueda: "'.$request->search.'"';
         }
 
-        $fileName = 'dominios_' . now()->format('Y-m-d_H-i') . '.doc';
+        $fileName = 'dominios_'.now()->format('Y-m-d_H-i').'.doc';
 
         return response(view('domains.word', compact('domains', 'title')))
             ->header('Content-Type', 'application/vnd.ms-word')
-            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+            ->header('Content-Disposition', 'attachment; filename="'.$fileName.'"');
     }
 }

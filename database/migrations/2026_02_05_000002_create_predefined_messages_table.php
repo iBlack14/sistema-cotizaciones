@@ -20,7 +20,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->integer('order')->default(0); // Para ordenar los mensajes
             $table->timestamps();
-            
+
             $table->unique('number');
             $table->index(['type', 'is_active']);
         });

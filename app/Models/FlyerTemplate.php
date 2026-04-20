@@ -28,7 +28,8 @@ class FlyerTemplate extends Model
 
     public function getUrlAttribute(): string
     {
-        $relativePath = $this->path ?: ('flyers/' . $this->filename);
-        return url('storage/' . ltrim($relativePath, '/'));
+        $relativePath = $this->path ?: ('flyers/'.$this->filename);
+
+        return url('storage/'.ltrim($relativePath, '/'));
     }
 }

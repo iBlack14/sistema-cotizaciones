@@ -66,8 +66,8 @@ class Message extends Model
     public function scopeScheduled($query)
     {
         return $query->whereNotNull('scheduled_at')
-                    ->where('scheduled_at', '>', now())
-                    ->where('status', 'pending');
+            ->where('scheduled_at', '>', now())
+            ->where('status', 'pending');
     }
 
     /**
@@ -93,7 +93,7 @@ class Message extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('subject', 'like', "%{$search}%")
-              ->orWhere('content', 'like', "%{$search}%");
+                ->orWhere('content', 'like', "%{$search}%");
         });
     }
 
@@ -143,8 +143,8 @@ class Message extends Model
     public function scopeRecent($query, $days = 30)
     {
         return $query->visible()
-                    ->where('created_at', '>=', now()->subDays($days))
-                    ->latest();
+            ->where('created_at', '>=', now()->subDays($days))
+            ->latest();
     }
 
     /**
@@ -205,11 +205,11 @@ class Message extends Model
      */
     public function assignMessageNumber()
     {
-        if (!$this->message_number) {
+        if (! $this->message_number) {
             $lastNumber = static::where('user_id', $this->user_id)
-                               ->whereNotNull('message_number')
-                               ->max('message_number') ?? 0;
-            
+                ->whereNotNull('message_number')
+                ->max('message_number') ?? 0;
+
             $this->update(['message_number' => $lastNumber + 1]);
         }
     }
@@ -220,7 +220,7 @@ class Message extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::created(function ($message) {
             $message->assignMessageNumber();
         });

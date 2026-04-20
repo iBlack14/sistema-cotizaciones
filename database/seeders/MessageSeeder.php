@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Message;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class MessageSeeder extends Seeder
 {
@@ -14,9 +14,10 @@ class MessageSeeder extends Seeder
     public function run(): void
     {
         $user = User::first();
-        
-        if (!$user) {
+
+        if (! $user) {
             $this->command->info('No hay usuarios en la base de datos. Crea un usuario primero.');
+
             return;
         }
 
@@ -79,6 +80,6 @@ class MessageSeeder extends Seeder
             Message::create(array_merge($messageData, ['user_id' => $user->id]));
         }
 
-        $this->command->info('Se han creado ' . count($messages) . ' mensajes de ejemplo.');
+        $this->command->info('Se han creado '.count($messages).' mensajes de ejemplo.');
     }
 }

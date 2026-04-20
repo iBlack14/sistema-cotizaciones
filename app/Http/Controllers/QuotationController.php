@@ -55,8 +55,8 @@ class QuotationController extends Controller
     {
         $raw = trim($value);
         $match = preg_match('/(\d{1,2})\s*(?:de\s+)?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)/i', $raw, $matches);
-        
-        if (!$match) {
+
+        if (! $match) {
             return ['day' => '', 'month' => ''];
         }
 
@@ -79,7 +79,7 @@ class QuotationController extends Controller
             ->map(function ($note) {
                 $llamarRaw = (string) ($note->llamar ?? '');
                 $parsed = $this->parseLlamarParts($llamarRaw);
-                
+
                 return [
                     'id' => (int) $note->id,
                     'cliente' => (string) ($note->cliente ?? ''),
@@ -102,7 +102,7 @@ class QuotationController extends Controller
 
     public function saveNotes(Request $request)
     {
-        \Illuminate\Support\Facades\Log::info('RAW REQUEST CONTENT: ' . $request->getContent());
+        \Illuminate\Support\Facades\Log::info('RAW REQUEST CONTENT: '.$request->getContent());
         \Illuminate\Support\Facades\Log::info('saveNotes requested', $request->all());
         $validated = $request->validate([
             'notes' => 'nullable|array',
@@ -166,14 +166,14 @@ class QuotationController extends Controller
                 }
 
                 if (! $note) {
-                    $note = new \App\Models\Note();
+                    $note = new \App\Models\Note;
                     $note->user_id = $userId;
                 }
 
                 $note->cliente = $noteData['cliente'];
                 $note->ruc = $noteData['ruc'];
                 $note->telefono = $noteData['telefono'];
-                if ($noteData['llamar'] !== '' || !$note->exists || empty($note->llamar)) {
+                if ($noteData['llamar'] !== '' || ! $note->exists || empty($note->llamar)) {
                     $note->llamar = $noteData['llamar'];
                 }
                 $note->servicio = $noteData['servicio'];
@@ -207,7 +207,7 @@ class QuotationController extends Controller
             ->map(function ($note) {
                 $llamarRaw = (string) ($note->llamar ?? '');
                 $parsed = $this->parseLlamarParts($llamarRaw);
-                
+
                 return [
                     'id' => (int) $note->id,
                     'cliente' => (string) ($note->cliente ?? ''),
@@ -604,6 +604,7 @@ class QuotationController extends Controller
     public function publicShow($slug)
     {
         $quotation = Quotation::where('slug', $slug)->firstOrFail();
+
         return $this->downloadPDF($quotation);
     }
 
@@ -847,6 +848,7 @@ class QuotationController extends Controller
 
         $statusLabel = static function (?string $status): string {
             $normalized = strtolower(trim((string) $status));
+
             return match ($normalized) {
                 'in_process', 'en_proceso', 'en proceso' => 'En Proceso',
                 'completed', 'completado', 'completada' => 'Completado',
@@ -940,6 +942,7 @@ class QuotationController extends Controller
         $writer->save('php://output');
         exit;
     }
+
     public function exportWord(Request $request)
     {
         $query = Quotation::with(['items', 'user']);
@@ -1003,17 +1006,17 @@ class QuotationController extends Controller
                 // Full month selected
                 $months = [
                     1 => 'ENERO', 2 => 'FEBRERO', 3 => 'MARZO', 4 => 'ABRIL', 5 => 'MAYO', 6 => 'JUNIO',
-                    7 => 'JULIO', 8 => 'AGOSTO', 9 => 'SEPTIEMBRE', 10 => 'OCTUBRE', 11 => 'NOVIEMBRE', 12 => 'DICIEMBRE'
+                    7 => 'JULIO', 8 => 'AGOSTO', 9 => 'SEPTIEMBRE', 10 => 'OCTUBRE', 11 => 'NOVIEMBRE', 12 => 'DICIEMBRE',
                 ];
-                $reportTitle = 'REPORTE MES DE ' . $months[$start->month] . ' ' . $start->year;
+                $reportTitle = 'REPORTE MES DE '.$months[$start->month].' '.$start->year;
             } else {
                 // Custom range
-                $reportTitle = 'DEL ' . $start->format('d/m/Y') . ' AL ' . $end->format('d/m/Y');
+                $reportTitle = 'DEL '.$start->format('d/m/Y').' AL '.$end->format('d/m/Y');
             }
         } elseif ($request->filled('date_from')) {
-            $reportTitle = 'DESDE ' . \Carbon\Carbon::parse($request->date_from)->format('d/m/Y');
+            $reportTitle = 'DESDE '.\Carbon\Carbon::parse($request->date_from)->format('d/m/Y');
         } elseif ($request->filled('date_to')) {
-            $reportTitle = 'HASTA ' . \Carbon\Carbon::parse($request->date_to)->format('d/m/Y');
+            $reportTitle = 'HASTA '.\Carbon\Carbon::parse($request->date_to)->format('d/m/Y');
         }
 
         $fileName = 'cotizaciones_'.now()->format('Y-m-d_H-i').'.doc';

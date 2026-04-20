@@ -18,12 +18,13 @@ return new class extends Migration
         });
 
         // Backfill with existing user names so old records keep client labels.
-        DB::statement('
-            UPDATE domains d
-            INNER JOIN users u ON u.id = d.user_id
-            SET d.client_name = u.name
-            WHERE d.client_name IS NULL
-        ');
+        DB::table('domains')
+            ->whereNull('client_name')
+            ->update([
+                'client_name' => DB::raw(
+                    '(SELECT name FROM users WHERE users.id = domains.user_id LIMIT 1)'
+                ),
+            ]);
     }
 
     /**
@@ -37,4 +38,3 @@ return new class extends Migration
         });
     }
 };
-

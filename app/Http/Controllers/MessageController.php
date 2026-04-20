@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Message;
 use App\Models\Domain;
 use App\Models\FlyerTemplate;
+use App\Models\Message;
 use App\Models\Quotation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -28,7 +28,7 @@ class MessageController extends Controller
             ->orderByDesc('created_at')
             ->get();
         foreach ($flyers as $flyer) {
-            $this->ensurePublicStorageMirror($flyer->path ?: ('flyers/' . $flyer->filename));
+            $this->ensurePublicStorageMirror($flyer->path ?: ('flyers/'.$flyer->filename));
         }
 
         // Obtener categorías únicas para los tabs
@@ -227,7 +227,7 @@ class MessageController extends Controller
     {
         $this->authorize('update', $message);
 
-        if (!in_array($message->status, ['draft', 'pending'])) {
+        if (! in_array($message->status, ['draft', 'pending'])) {
             return redirect()->route('messages.show', $message)
                 ->with('error', 'Este mensaje ya fue enviado o no se puede enviar.');
         }
@@ -246,7 +246,7 @@ class MessageController extends Controller
                     $successCount++;
                 } catch (\Exception $e) {
                     $failedEmails[] = $email;
-                    Log::error("Error enviando mensaje a {$email}: " . $e->getMessage());
+                    Log::error("Error enviando mensaje a {$email}: ".$e->getMessage());
                 }
             }
 
@@ -265,9 +265,10 @@ class MessageController extends Controller
 
             if ($successCount > 0) {
                 $successMessage = "Mensaje enviado exitosamente a {$successCount} destinatario(s).";
-                if (!empty($failedEmails)) {
-                    $successMessage .= " Falló el envío a " . count($failedEmails) . " destinatario(s).";
+                if (! empty($failedEmails)) {
+                    $successMessage .= ' Falló el envío a '.count($failedEmails).' destinatario(s).';
                 }
+
                 return redirect()->route('messages.show', $message)
                     ->with('success', $successMessage);
             } else {
@@ -276,7 +277,7 @@ class MessageController extends Controller
             }
 
         } catch (\Exception $e) {
-            Log::error('Error enviando mensaje: ' . $e->getMessage());
+            Log::error('Error enviando mensaje: '.$e->getMessage());
 
             $message->update([
                 'status' => 'failed',
@@ -286,7 +287,7 @@ class MessageController extends Controller
             ]);
 
             return redirect()->route('messages.show', $message)
-                ->with('error', 'Error al enviar el mensaje: ' . $e->getMessage());
+                ->with('error', 'Error al enviar el mensaje: '.$e->getMessage());
         }
     }
 
@@ -301,7 +302,7 @@ class MessageController extends Controller
         $newMessage->status = 'draft';
         $newMessage->sent_at = null;
         $newMessage->scheduled_at = null;
-        $newMessage->subject = 'Copia de: ' . $message->subject;
+        $newMessage->subject = 'Copia de: '.$message->subject;
         $newMessage->save();
 
         return redirect()->route('messages.edit', $newMessage)
@@ -345,7 +346,7 @@ class MessageController extends Controller
                                 $recipients[] = [
                                     'email' => $email,
                                     'name' => $domain->domain_name,
-                                    'type' => 'domain'
+                                    'type' => 'domain',
                                 ];
                             }
                         }
@@ -363,7 +364,7 @@ class MessageController extends Controller
                         $recipients[] = [
                             'email' => $quotation->client_email,
                             'name' => $quotation->client_name,
-                            'type' => 'quotation'
+                            'type' => 'quotation',
                         ];
                     }
                 }
@@ -384,7 +385,7 @@ class MessageController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Mensaje ocultado exitosamente.'
+            'message' => 'Mensaje ocultado exitosamente.',
         ]);
     }
 
@@ -399,7 +400,7 @@ class MessageController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Mensaje restaurado exitosamente.'
+            'message' => 'Mensaje restaurado exitosamente.',
         ]);
     }
 
@@ -460,7 +461,7 @@ class MessageController extends Controller
 
         $pdf = \PDF::loadView('messages.pdf', compact('messages'));
 
-        return $pdf->download('mensajes-' . now()->format('Y-m-d') . '.pdf');
+        return $pdf->download('mensajes-'.now()->format('Y-m-d').'.pdf');
     }
 
     /**
@@ -470,32 +471,45 @@ class MessageController extends Controller
     {
         $request->validate([
             'number' => 'required|string|max:15',
-            'message_id' => 'required|exists:predefined_messages,id',
+            'message_id' => 'nullable|exists:predefined_messages,id',
+            'content' => 'nullable|string|max:5000',
         ]);
 
-        // Crear registro del mensaje enviado
-        $predefinedMessage = \App\Models\PredefinedMessage::find($request->message_id);
+        // Permite registrar envios desde Soporte con plantilla o mensaje libre.
+        $predefinedMessage = null;
+        if ($request->filled('message_id')) {
+            $predefinedMessage = \App\Models\PredefinedMessage::find($request->message_id);
+        }
+
+        $subject = $predefinedMessage
+            ? 'WhatsApp: '.$predefinedMessage->title
+            : 'WhatsApp: mensaje directo';
+
+        $content = $predefinedMessage?->content
+            ?? trim((string) $request->input('content', ''))
+            ?: 'Mensaje enviado desde soporte';
 
         Message::create([
             'user_id' => Auth::id(),
-            'subject' => 'WhatsApp: ' . $predefinedMessage->title,
-            'content' => $predefinedMessage->content,
+            'subject' => $subject,
+            'content' => $content,
             'type' => 'whatsapp',
             'priority' => 'normal',
             'status' => 'sent',
-            'recipients' => ['+51' . $request->number],
+            'recipients' => ['+51'.$request->number],
             'recipient_type' => 'custom',
             'sent_at' => now(),
             'metadata' => [
                 'whatsapp_number' => $request->number,
                 'predefined_message_id' => $request->message_id,
                 'sent_from' => 'whatsapp_widget',
+                'content_preview' => Str::limit($content, 120),
             ],
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Envío registrado exitosamente.'
+            'message' => 'Envío registrado exitosamente.',
         ]);
     }
 
@@ -507,13 +521,13 @@ class MessageController extends Controller
         $message = \App\Models\PredefinedMessage::findOrFail($predefined);
 
         // Toggle favorite status
-        $message->is_favorite = !$message->is_favorite;
+        $message->is_favorite = ! $message->is_favorite;
         $message->save();
 
         return response()->json([
             'success' => true,
             'is_favorite' => $message->is_favorite,
-            'message' => $message->is_favorite ? 'Mensaje marcado como favorito' : 'Mensaje eliminado de favoritos'
+            'message' => $message->is_favorite ? 'Mensaje marcado como favorito' : 'Mensaje eliminado de favoritos',
         ]);
     }
 
@@ -526,7 +540,7 @@ class MessageController extends Controller
         ]);
 
         $file = $request->file('image');
-        $filename = time() . '_' . $file->getClientOriginalName();
+        $filename = time().'_'.$file->getClientOriginalName();
         $path = $file->storeAs('flyers', $filename, 'public');
         $this->ensurePublicStorageMirror($path);
 
@@ -550,7 +564,7 @@ class MessageController extends Controller
         }
 
         Storage::disk('public')->delete($flyer->path);
-        $publicPath = public_path('storage/' . ltrim($flyer->path ?: ('flyers/' . $flyer->filename), '/'));
+        $publicPath = public_path('storage/'.ltrim($flyer->path ?: ('flyers/'.$flyer->filename), '/'));
         if (is_file($publicPath)) {
             @unlink($publicPath);
         }
@@ -562,15 +576,15 @@ class MessageController extends Controller
     private function ensurePublicStorageMirror(string $relativePath): void
     {
         $relativePath = ltrim($relativePath, '/');
-        $source = storage_path('app/public/' . $relativePath);
-        $target = public_path('storage/' . $relativePath);
+        $source = storage_path('app/public/'.$relativePath);
+        $target = public_path('storage/'.$relativePath);
 
-        if (!is_file($source) || is_file($target)) {
+        if (! is_file($source) || is_file($target)) {
             return;
         }
 
         $targetDir = dirname($target);
-        if (!is_dir($targetDir)) {
+        if (! is_dir($targetDir)) {
             @mkdir($targetDir, 0755, true);
         }
 

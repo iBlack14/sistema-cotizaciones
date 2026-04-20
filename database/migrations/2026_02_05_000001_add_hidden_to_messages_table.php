@@ -15,7 +15,7 @@ return new class extends Migration
             $table->boolean('is_hidden')->default(false)->after('metadata');
             $table->timestamp('hidden_at')->nullable()->after('is_hidden');
             $table->integer('message_number')->nullable()->after('hidden_at');
-            
+
             $table->index(['user_id', 'is_hidden', 'created_at']);
         });
     }

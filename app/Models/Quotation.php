@@ -38,13 +38,13 @@ class Quotation extends Model
 
         static::created(function ($quotation) {
             if (str_contains($quotation->slug, '-placeholder-')) {
-                 // The slug depends on items, but they are created AFTER the quotation.
-                 // So we'll update it later or just keep a solid random string.
+                // The slug depends on items, but they are created AFTER the quotation.
+                // So we'll update it later or just keep a solid random string.
             }
             // For better experience, we can generate a better slug once we have more info.
             $serviceName = $quotation->items->first()->service_name ?? 'servicio';
-            $slugBase = \Illuminate\Support\Str::slug($serviceName . '-' . $quotation->id);
-            $quotation->slug = $slugBase . '-' . \Illuminate\Support\Str::random(5);
+            $slugBase = \Illuminate\Support\Str::slug($serviceName.'-'.$quotation->id);
+            $quotation->slug = $slugBase.'-'.\Illuminate\Support\Str::random(5);
             $quotation->saveQuietly();
         });
     }

@@ -13,15 +13,21 @@ class SettingController extends Controller
     public function index()
     {
         $settings = Setting::all()->pluck('value', 'key');
-        
+
         // Default Dashboard WhatsApp Templates
-        if (!isset($settings['wa_activation'])) $settings['wa_activation'] = "Hola [Nombre],\n\nSu servicio asociado al dominio *[Dominio]* ha sido activado exitosamente.\n\n¡Gracias por confiar en nosotros!";
-        if (!isset($settings['wa_expiry'])) $settings['wa_expiry'] = "Hola [Nombre],\n\nLe recordamos que su dominio *[Dominio]* está próximo a vencer.\n\nPor favor, confirme si desea renovarlo para evitar interrupciones.\n\nQuedamos atentos.";
-        if (!isset($settings['wa_promo'])) $settings['wa_promo'] = "Estimado/a [Nombre],\n\nLe informamos que tiene un saldo pendiente para la renovación de *[Dominio]*.\n\nPor favor, envíenos su comprobante una vez realizado el pago.\n\n¡Gracias!";
+        if (! isset($settings['wa_activation'])) {
+            $settings['wa_activation'] = "Hola [Nombre],\n\nSu servicio asociado al dominio *[Dominio]* ha sido activado exitosamente.\n\n¡Gracias por confiar en nosotros!";
+        }
+        if (! isset($settings['wa_expiry'])) {
+            $settings['wa_expiry'] = "Hola [Nombre],\n\nLe recordamos que su dominio *[Dominio]* está próximo a vencer.\n\nPor favor, confirme si desea renovarlo para evitar interrupciones.\n\nQuedamos atentos.";
+        }
+        if (! isset($settings['wa_promo'])) {
+            $settings['wa_promo'] = "Estimado/a [Nombre],\n\nLe informamos que tiene un saldo pendiente para la renovación de *[Dominio]*.\n\nPor favor, envíenos su comprobante una vez realizado el pago.\n\n¡Gracias!";
+        }
 
         $images = ServiceImage::orderBy('order')->get();
         foreach ($images as $image) {
-            $this->ensurePublicStorageMirror($image->path ?: ('service_images/' . $image->filename));
+            $this->ensurePublicStorageMirror($image->path ?: ('service_images/'.$image->filename));
         }
         $services = $this->getAvailableServices();
         $mappings = ServiceMapping::with('serviceImage')->orderBy('service_name')->orderBy('order')->get();
@@ -31,9 +37,9 @@ class SettingController extends Controller
         $allMessages = \App\Models\PredefinedMessage::orderBy('created_at', 'desc')->get();
         // Categorize messages (default to general if column not yet added due to sandbox issues)
         $msgByUsage = [
-            'quotation' => $allMessages->filter(fn($m) => ($m->usage ?? 'general') === 'quotation'),
-            'dashboard' => $allMessages->filter(fn($m) => ($m->usage ?? 'general') === 'dashboard'),
-            'general' => $allMessages->filter(fn($m) => ($m->usage ?? 'general') === 'general' || !isset($m->usage)),
+            'quotation' => $allMessages->filter(fn ($m) => ($m->usage ?? 'general') === 'quotation'),
+            'dashboard' => $allMessages->filter(fn ($m) => ($m->usage ?? 'general') === 'dashboard'),
+            'general' => $allMessages->filter(fn ($m) => ($m->usage ?? 'general') === 'general' || ! isset($m->usage)),
         ];
 
         return view('settings.index', compact('settings', 'images', 'services', 'mappings', 'msgByUsage'));
@@ -74,18 +80,18 @@ class SettingController extends Controller
 
             foreach ($files as $index => $file) {
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $filename = time() . '_' . $index . '_' . $file->getClientOriginalName();
-                
+                $filename = time().'_'.$index.'_'.$file->getClientOriginalName();
+
                 // Store in storage/app/public/service_images
                 $path = $file->storeAs('service_images', $filename, 'public');
-                
+
                 // Keep a physical copy in public/storage for environments without symlink.
                 $this->ensurePublicStorageMirror($path);
 
                 // Naming logic for multiple files
                 if ($request->filled('name')) {
-                    $displayName = count($files) > 1 
-                        ? $request->name . ' (' . ($index + 1) . ')' 
+                    $displayName = count($files) > 1
+                        ? $request->name.' ('.($index + 1).')'
                         : $request->name;
                 } else {
                     $displayName = $originalName;
@@ -100,7 +106,7 @@ class SettingController extends Controller
                 ]);
 
                 // Auto-map if service was selected
-                if (!empty($serviceName)) {
+                if (! empty($serviceName)) {
                     ServiceMapping::create([
                         'service_name' => $serviceName,
                         'service_image_id' => $image->id,
@@ -126,7 +132,7 @@ class SettingController extends Controller
 
         // Delete file from storage
         Storage::disk('public')->delete($image->path);
-        $publicPath = public_path('storage/' . ltrim($image->path ?: ('service_images/' . $image->filename), '/'));
+        $publicPath = public_path('storage/'.ltrim($image->path ?: ('service_images/'.$image->filename), '/'));
         if (is_file($publicPath)) {
             @unlink($publicPath);
         }
@@ -245,15 +251,15 @@ class SettingController extends Controller
     private function ensurePublicStorageMirror(string $relativePath): void
     {
         $relativePath = ltrim($relativePath, '/');
-        $source = storage_path('app/public/' . $relativePath);
-        $target = public_path('storage/' . $relativePath);
+        $source = storage_path('app/public/'.$relativePath);
+        $target = public_path('storage/'.$relativePath);
 
-        if (!is_file($source) || is_file($target)) {
+        if (! is_file($source) || is_file($target)) {
             return;
         }
 
         $targetDir = dirname($target);
-        if (!is_dir($targetDir)) {
+        if (! is_dir($targetDir)) {
             @mkdir($targetDir, 0755, true);
         }
 

@@ -1,9 +1,9 @@
 <?php
 
+use App\Mail\RenewalEmail;
+use App\Models\Domain;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use App\Models\Domain;
-use App\Mail\RenewalEmail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schedule;
 
@@ -13,7 +13,7 @@ Artisan::command('inspire', function () {
 
 Artisan::command('domains:send-alerts', function () {
     $this->info('Consultando dominios que vencen en 30 días...');
-    
+
     // Obtenemos dominios que vencen exactamente en 30 días
     $targetDate = now()->addDays(30)->toDateString();
     $domains = Domain::whereDate('expiration_date', $targetDate)->get();
@@ -21,15 +21,16 @@ Artisan::command('domains:send-alerts', function () {
     foreach ($domains as $domain) {
         $email = $domain->emails ?? $domain->corporate_emails;
 
-        if (!$email) {
+        if (! $email) {
             $this->warn("El dominio {$domain->domain_name} no tiene correo asignado. Saltando...");
+
             continue;
         }
 
         try {
             $subject = "Aviso de Renovación: {$domain->domain_name}";
             $days = 30;
-            
+
             Mail::to($email)->send(new RenewalEmail(
                 $subject,
                 $domain->client_name,
@@ -42,7 +43,7 @@ Artisan::command('domains:send-alerts', function () {
 
             $this->info("Mensaje enviado exitosamente a {$email} para el dominio {$domain->domain_name}");
         } catch (\Exception $e) {
-            $this->error("Error enviando a {$email}: " . $e->getMessage());
+            $this->error("Error enviando a {$email}: ".$e->getMessage());
         }
     }
 })->purpose('Enviar correos de renovación a los dominios que vencen en 30 días');

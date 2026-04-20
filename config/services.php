@@ -36,9 +36,17 @@ return [
     ],
 
     'evolution_api' => [
-        'url'           => env('EVOLUTION_API_URL', 'https://wsapi.blxkstudio.com'),
-        'api_key'       => env('EVOLUTION_API_KEY', ''),
+        'url' => env('EVOLUTION_API_URL', 'https://wsapi.blxkstudio.com'),
+        'api_key' => env('EVOLUTION_API_KEY', ''),
         'instance_name' => env('EVOLUTION_INSTANCE_NAME', 'viacomunicativa'),
+    ],
+
+    'whatsapp_api' => [
+        'mode' => env('WHATSAPP_MODE', 'browser'),
+        'url' => env('WHATSAPP_API_URL', ''),
+        'api_key' => env('WHATSAPP_API_KEY', ''),
+        'instance_name' => env('WHATSAPP_INSTANCE_NAME', 'viacomunicativa'),
+        'timeout' => (int) env('WHATSAPP_API_TIMEOUT', 15),
     ],
 
 ];

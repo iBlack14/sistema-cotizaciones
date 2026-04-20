@@ -15,7 +15,8 @@ class ServiceImage extends Model
 
     public function getUrlAttribute()
     {
-        $relativePath = $this->path ?: ('service_images/' . $this->filename);
-        return url('storage/' . ltrim($relativePath, '/'));
+        $relativePath = $this->path ?: ('service_images/'.$this->filename);
+
+        return url('storage/'.ltrim($relativePath, '/'));
     }
 }

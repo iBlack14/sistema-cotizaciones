@@ -96,12 +96,12 @@ class DomainsImport implements ToCollection, WithHeadingRow
                 continue; // Skip to next row if pre-processing fails
             }
 
-            $row['cliente'] = !empty($row['cliente']) ? $row['cliente'] : (!empty($row['empresa']) ? $row['empresa'] : (!empty($row['empresacliente']) ? $row['empresacliente'] : (!empty($row['empresa_cliente']) ? $row['empresa_cliente'] : (!empty($row['company']) ? $row['company'] : 'Cliente Desconocido'))));
-            $row['dominio'] = !empty($row['dominio']) ? $row['dominio'] : (!empty($row['domain']) ? $row['domain'] : (!empty($row['domain_name']) ? $row['domain_name'] : null));
-            $row['fecha_registro'] = !empty($row['fecha_registro']) ? $row['fecha_registro'] : (!empty($row['fecha_de_activacion']) ? $row['fecha_de_activacion'] : (!empty($row['registration_date']) ? $row['registration_date'] : (!empty($row['f_registro']) ? $row['f_registro'] : now())));
-            
+            $row['cliente'] = ! empty($row['cliente']) ? $row['cliente'] : (! empty($row['empresa']) ? $row['empresa'] : (! empty($row['empresacliente']) ? $row['empresacliente'] : (! empty($row['empresa_cliente']) ? $row['empresa_cliente'] : (! empty($row['company']) ? $row['company'] : 'Cliente Desconocido'))));
+            $row['dominio'] = ! empty($row['dominio']) ? $row['dominio'] : (! empty($row['domain']) ? $row['domain'] : (! empty($row['domain_name']) ? $row['domain_name'] : null));
+            $row['fecha_registro'] = ! empty($row['fecha_registro']) ? $row['fecha_registro'] : (! empty($row['fecha_de_activacion']) ? $row['fecha_de_activacion'] : (! empty($row['registration_date']) ? $row['registration_date'] : (! empty($row['f_registro']) ? $row['f_registro'] : now())));
+
             // Default expiration to 1 year after registration if missing
-            $row['fecha_vencimiento'] = !empty($row['fecha_vencimiento']) ? $row['fecha_vencimiento'] : (!empty($row['expiration_date']) ? $row['expiration_date'] : (!empty($row['f_vencimiento']) ? $row['f_vencimiento'] : null));
+            $row['fecha_vencimiento'] = ! empty($row['fecha_vencimiento']) ? $row['fecha_vencimiento'] : (! empty($row['expiration_date']) ? $row['expiration_date'] : (! empty($row['f_vencimiento']) ? $row['f_vencimiento'] : null));
             if (! $row['fecha_vencimiento'] && $row['fecha_registro']) {
                 try {
                     $regDate = $this->parseDate($row['fecha_registro']);
