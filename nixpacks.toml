@@ -8,7 +8,7 @@ nixPkgs = ["...", "python311Packages.supervisor"]
 [phases.build]
 cmds = [
     "chmod +x /assets/start.sh",
-    "mkdir -p /var/log/supervisor",
+    "mkdir -p /var/log/supervisor /var/log/nginx /var/log/php-fpm",
     "touch /var/log/nginx-access.log /var/log/nginx-error.log",
     "...",
 ]
@@ -21,6 +21,7 @@ cmd = '/assets/start.sh'
 #!/bin/bash
 # Transform the nginx configuration
 node /assets/scripts/prestart.mjs /assets/nginx.template.conf /assets/nginx.conf
+
 # Start supervisor
 supervisord -c /assets/supervisord.conf -n
 '''
@@ -45,6 +46,10 @@ template = template.replace(/\$\{(\w+)\}/g, (match, name) => {
 template = template.replace(/\$if\((\w+)\)\s*\(([\s\S]*?)\)\s*else\s*\(([\s\S]*?)\)/g, (match, condition, truePart, falsePart) => {
   return variables[condition] ? truePart.trim() : falsePart.trim();
 });
+
+// Fix potential missing $!{nginx} expansion if it survived
+// We try to find where nginx config is usually located in Nixpacks or use relative paths
+template = template.replace(/\$!\{nginx\}/g, '/etc/nginx'); 
 
 fs.writeFileSync(outputPath, template);
 '''
@@ -87,7 +92,7 @@ stderr_logfile=/var/log/worker-nginx.log
 "worker-phpfpm.conf" = '''
 [program:worker-phpfpm]
 process_name=%(program_name)s_%(process_num)02d
-command=php-fpm -y /assets/php-fpm.conf -F
+command=php-fpm -y /assets/php-fpm.conf -F -R
 autostart=true
 autorestart=true
 stdout_logfile=/var/log/worker-phpfpm.log
@@ -110,10 +115,14 @@ stderr_logfile=/var/log/worker-laravel.log
 '''
 
 "php-fpm.conf" = '''
+[global]
+daemonize = no
+error_log = /var/log/php-fpm/error.log
+
 [www]
 listen = 127.0.0.1:9000
-; user = www-data
-; group = www-data
+user = root
+group = root
 pm = dynamic
 pm.max_children = 50
 pm.min_spare_servers = 4
@@ -136,7 +145,8 @@ events {
 }
 
 http {
- include $!{nginx}/conf/mime.types;
+ include mime.types;
+ include /etc/nginx/mime.types;
  index index.html index.htm index.php;
 
  default_type application/octet-stream;
@@ -176,8 +186,8 @@ http {
  location ~ \.php$ {
  fastcgi_pass 127.0.0.1:9000;
  fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
- include $!{nginx}/conf/fastcgi_params;
- include $!{nginx}/conf/fastcgi.conf;
+ include fastcgi_params;
+ include fastcgi.conf;
  }
 
  location ~ /\.(?!well-known).* {
