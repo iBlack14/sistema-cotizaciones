@@ -13,8 +13,14 @@ Esta guia es para desplegar Laravel en Coolify usando buildpacks/Nixpacks (modo 
 1. En Coolify, crea un recurso tipo **Application**.
 2. Conecta tu repositorio y selecciona la rama a desplegar.
 3. En **Build Pack**, usa deteccion automatica (Nixpacks).
-4. Define el **Puerto** de la app en `80` (si usas servidor web interno de PHP, usa `8000` y ajusta reverse proxy).
-5. Dominio: agrega tu dominio final (por ejemplo `cotizaciones.tudominio.com`).
+4. Este repo incluye **`nixpacks.toml`** (recomendado por Coolify para Laravel). Evita el error de nginx `duplicate location "/"` cuando hay `package.json` y PHP a la vez. Nginx escucha en la variable **`PORT`** que Coolify inyecta: el **Puerto expuesto** en la app (por ejemplo `80` como en la [documentación oficial](https://coolify.io/docs/applications/laravel), o `3000` si así lo configuraste) debe ser el mismo que use el contenedor.
+5. Deja vacío el **Start Command** personalizado en Coolify si usas este `nixpacks.toml` (el arranque lo define `[start]` en el archivo). Si pusiste `php artisan serve` a mano, quitalo: chocaría con nginx/php-fpm del buildpack.
+6. Dominio: agrega tu dominio final (por ejemplo `cotizaciones.tudominio.com`).
+
+### Si ves `nginx: [emerg] duplicate location "/"`
+
+- Sube al repo la versión con **`nixpacks.toml`** y vuelve a desplegar.
+- Referencia: [Coolify Laravel + Nixpacks](https://coolify.io/docs/applications/laravel) y [issue conocido](https://github.com/coollabsio/coolify/issues/7867).
 
 ## 3) Variables de entorno (Environment)
 
@@ -67,11 +73,24 @@ composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader &
 
 ## 5) Comando de inicio (Start Command)
 
-Para despliegue tradicional simple en Coolify:
+### Opción A — Con `nixpacks.toml` (este repo, recomendado)
+
+- Deja **Start Command vacío** en Coolify: el arranque lo define `nixpacks.toml` (nginx + php-fpm + supervisor).
+- Ejecuta migraciones una vez con **Post-deployment** o desde terminal del contenedor:
 
 ```bash
-php artisan migrate --force && php artisan storage:link || true && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=80
+php artisan migrate --force && php artisan storage:link || true && php artisan optimize
 ```
+
+### Opción B — Sin `nixpacks.toml` (solo `php artisan serve`)
+
+Solo si no usas el archivo de arriba y Nixpacks arranca un solo proceso PHP:
+
+```bash
+php artisan migrate --force && php artisan storage:link || true && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=3000
+```
+
+(El `--port` debe coincidir con el puerto expuesto en Coolify.)
 
 Si prefieres no migrar automaticamente en cada inicio, quita `php artisan migrate --force` y ejecútalo manual al desplegar.
 
