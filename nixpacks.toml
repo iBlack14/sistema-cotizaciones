@@ -3,7 +3,7 @@
 # Ejemplo upstream: https://github.com/coollabsio/coolify-examples/tree/main/laravel
 
 [phases.setup]
-nixPkgs = ["...", "supervisor"]
+nixPkgs = ["...", "python311Packages.supervisor"]
 
 [phases.build]
 cmds = [
