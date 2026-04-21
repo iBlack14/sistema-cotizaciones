@@ -197,8 +197,8 @@ http {
  location ~ \.php$ {
  fastcgi_pass 127.0.0.1:9000;
  fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
- include fastcgi_params;
- include fastcgi.conf;
+ include /etc/nginx/fastcgi_params;
+ include /etc/nginx/fastcgi.conf;
  }
 
  location ~ /\.(?!well-known).* {
