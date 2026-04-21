@@ -157,7 +157,6 @@ events {
 }
 
 http {
- include mime.types;
  include /etc/nginx/mime.types;
  index index.html index.htm index.php;
 
