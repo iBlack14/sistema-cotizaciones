@@ -46,6 +46,7 @@ DB_PASSWORD=tu_clave
 CACHE_STORE=file
 SESSION_DRIVER=file
 QUEUE_CONNECTION=sync
+ENABLE_QUEUE_WORKER=false
 FILESYSTEM_DISK=public
 
 # WhatsApp integration mode
@@ -62,6 +63,7 @@ WHATSAPP_API_TIMEOUT=15
 Notas:
 - Si Coolify te provee DB administrada, usa las credenciales que te entrega el recurso DB.
 - No subas secretos al repo: todo va en variables de Coolify.
+- Si luego cambias `QUEUE_CONNECTION` a un driver asincrono (`database`, `redis`, etc.), define tambien `ENABLE_QUEUE_WORKER=true` para que Supervisor levante el worker.
 
 ## 4) Comando de build (Build Command)
 

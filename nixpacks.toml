@@ -19,8 +19,31 @@ cmd = '/assets/start.sh'
 [staticAssets]
 "start.sh" = '''
 #!/bin/bash
+set -e
+
 # Transform the nginx configuration
 node /assets/scripts/prestart.mjs /assets/nginx.template.conf /assets/nginx.conf
+
+# Enable the Laravel queue worker only for async drivers.
+# By default this app deploys with sync queues, so avoid a crash/restart loop
+# when Supervisor starts a worker that is not needed.
+QUEUE_DRIVER="${QUEUE_CONNECTION:-sync}"
+QUEUE_WORKER_ENABLED="${ENABLE_QUEUE_WORKER:-}"
+
+if [ -z "$QUEUE_WORKER_ENABLED" ]; then
+  case "$QUEUE_DRIVER" in
+    sync|null|"")
+      QUEUE_WORKER_ENABLED="false"
+      ;;
+    *)
+      QUEUE_WORKER_ENABLED="true"
+      ;;
+  esac
+fi
+
+if [ "$QUEUE_WORKER_ENABLED" != "true" ]; then
+  rm -f /assets/worker-laravel.conf
+fi
 
 # Start supervisor
 supervisord -c /assets/supervisord.conf -n
@@ -102,7 +125,8 @@ stderr_logfile=/var/log/worker-phpfpm.log
 "worker-laravel.conf" = '''
 [program:worker-laravel]
 process_name=%(program_name)s_%(process_num)02d
-command=bash -c 'exec php /app/artisan queue:work --sleep=3 --tries=3 --max-time=3600'
+directory=/app
+command=bash -lc 'exec php artisan queue:work --sleep=3 --tries=3 --max-time=3600'
 autostart=true
 autorestart=true
 stopasgroup=true
