@@ -24,22 +24,10 @@ set -e
 # Transform the nginx configuration
 node /assets/scripts/prestart.mjs /assets/nginx.template.conf /assets/nginx.conf
 
-# Enable the Laravel queue worker only for async drivers.
-# By default this app deploys with sync queues, so avoid a crash/restart loop
-# when Supervisor starts a worker that is not needed.
-QUEUE_DRIVER="${QUEUE_CONNECTION:-sync}"
-QUEUE_WORKER_ENABLED="${ENABLE_QUEUE_WORKER:-}"
-
-if [ -z "$QUEUE_WORKER_ENABLED" ]; then
-  case "$QUEUE_DRIVER" in
-    sync|null|"")
-      QUEUE_WORKER_ENABLED="false"
-      ;;
-    *)
-      QUEUE_WORKER_ENABLED="true"
-      ;;
-  esac
-fi
+# Enable the Laravel queue worker only when it is explicitly requested.
+# This keeps deploys safe when the environment has an async queue driver
+# configured but the database/cache backing services are not reachable yet.
+QUEUE_WORKER_ENABLED="${ENABLE_QUEUE_WORKER:-false}"
 
 if [ "$QUEUE_WORKER_ENABLED" != "true" ]; then
   rm -f /assets/worker-laravel.conf
